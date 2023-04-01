@@ -20,6 +20,8 @@ app.get('/select', function (req, res) {
 app.post('/insert', function (req, res) {
     let stats = randomStats(4);
     stats.sort(() => Math.random() - 0.5);
+    console.log(req);
+
     let values = {
         'str' : stats[0],
         'dex' : stats[1],
