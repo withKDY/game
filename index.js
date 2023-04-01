@@ -3,6 +3,8 @@ let express = require('express');
 const maria = require('./database/connect/maria');
 const app = express();
 const port = process.env.PORT || 3000;
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 
 app.get('/select', function (req, res) {
     maria.query('SELECT * FROM admin',
@@ -19,38 +21,39 @@ app.get('/select', function (req, res) {
 
 app.post('/insert', function (req, res) {
     let stats = randomStats(4);
-    stats.sort(() => Math.random() - 0.5);
-    console.log(req);
+    let data = req.body;
+    let max = Math.max.apply(Math, stats);
+    let character = new Array();
 
+    stats.sort(() => Math.random() - 0.5);
+    let job = getKeyByValue(stats, max);
     let values = {
+        'name': data.name,
+        "job" : job,
         'str' : stats[0],
         'dex' : stats[1],
         'int' : stats[2],
         'spr' : stats[3]
     }
+
     maria.query('INSERT INTO stats set ?', values, function (err, rows) {
+
         if (!err) {
-            res.send(rows);
+            character.push(rows);
+            res.send(character);
         } else {
             console.log('err : ' + err);
             res.send(err);
         }
-    })
+    });
+
+
 })
 
 function randomStats(e) {
     let list = new Array();
     let min = 0;
     let max = 30;
-    let number = 0;
-
-    // for (let i = 1; i < e; i++) {
-    //     number = parseInt(Math.random() * (max - min) + min);
-    //     max = max - number;
-    //     list.push(number);
-    // }
-    // list.push(max)
-    // return list;
 
     while(e - 1 > list.length) {
         let random = parseInt(Math.random() * (max - min) + min);
@@ -59,6 +62,26 @@ function randomStats(e) {
     }
     list.push(max);
     return list;
+}
+
+function getKeyByValue(obj, value) {
+    let key = parseInt(Object.keys(obj).find(key => obj[key] === value));
+    let job;
+    switch (key) {
+        case 0:
+            job = "전사";
+            break;
+        case 1:
+            job = "도적";
+            break;
+        case 2:
+            job = "마법사";
+            break;
+        case 3:
+            job = "힐러";
+            break;
+    }
+    return job;
 }
 
 app.listen(port, () => {
