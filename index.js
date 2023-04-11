@@ -24,28 +24,40 @@ app.post('/insert', function (req, res) {
     let data = req.body;
     let max = Math.max.apply(Math, stats);
     let character = new Array();
-
-    stats.sort(() => Math.random() - 0.5);
-    let job = getKeyByValue(stats, max);
+    let userId;
     let values = {
         'name': data.name,
-        "job" : job,
-        'str' : stats[0],
-        'dex' : stats[1],
-        'int' : stats[2],
-        'spr' : stats[3]
     }
-
-    maria.query('INSERT INTO stats set ?', values, function (err, rows) {
+    maria.query('INSERT INTO user set ?', values, function (err, rows) {
+        userId = rows.insertId;
+        values = {
+            'userId' : userId
+        }
         if (!err) {
             character.push(rows);
-            values = {
-                'userId' : rows.insertId
-            }
             maria.query('INSERT INTO inventory set ?', values, function (err, rows) {
                 if (!err) {
                     character.push(rows);
-                    res.send(character);
+                    stats.sort(() => Math.random() - 0.5);
+                    let job = getKeyByValue(stats, max);
+
+                    values = {
+                        'userId' : userId,
+                        "job" : job,
+                        'str' : stats[0],
+                        'dex' : stats[1],
+                        'int' : stats[2],
+                        'spr' : stats[3]
+                    }
+                    maria.query('INSERT INTO stats set ?', values, function (err, rows) {
+                        if (!err) {
+                            character.push(rows);
+                            res.send(character);
+                        } else {
+                            console.log('err : ' + err);
+                            res.send(err);
+                        }
+                    });
                 } else {
                     console.log('err : ' + err);
                     res.send(err);
@@ -55,7 +67,8 @@ app.post('/insert', function (req, res) {
             console.log('err : ' + err);
             res.send(err);
         }
-    });
+
+    })
 
 })
 
