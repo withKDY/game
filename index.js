@@ -37,16 +37,25 @@ app.post('/insert', function (req, res) {
     }
 
     maria.query('INSERT INTO stats set ?', values, function (err, rows) {
-
         if (!err) {
             character.push(rows);
-            res.send(character);
+            values = {
+                'userId' : rows.insertId
+            }
+            maria.query('INSERT INTO inventory set ?', values, function (err, rows) {
+                if (!err) {
+                    character.push(rows);
+                    res.send(character);
+                } else {
+                    console.log('err : ' + err);
+                    res.send(err);
+                }
+            })
         } else {
             console.log('err : ' + err);
             res.send(err);
         }
     });
-
 
 })
 
